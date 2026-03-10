@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio con Node.js</title>
+  <style>
+    body {
+      background-color: white;
+      color: black;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      transition: background-color 0.5s, color 0.5s;
+    }
+
+    input {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sitio web con Node.js</h1>
+
+  <input type="text" id="cajaTexto" placeholder="Escribe algo y presiona Enter">
+  <br>
+  <button id="botonColor">Cambiar colores</button>
+
+  <script>
+    const cajaTexto = document.getElementById("cajaTexto");
+    const botonColor = document.getElementById("botonColor");
+
+    let estadoColor = 0;
+
+    cajaTexto.addEventListener("keydown", function(evento) {
+      if (evento.key === "Enter") {
+        alert("Texto ingresado: " + cajaTexto.value);
+      }
+    });
+
+    botonColor.addEventListener("click", function() {
+      if (estadoColor === 0) {
+        document.body.style.backgroundColor = "black";
+        document.body.style.color = "white";
+        estadoColor = 1;
+      } else if (estadoColor === 1) {
+        document.body.style.backgroundColor = "skyblue";
+        document.body.style.color = "red";
+        estadoColor = 2;
+      } else {
+        document.body.style.backgroundColor = "white";
+        document.body.style.color = "black";
+        estadoColor = 0;
+      }
+    });
+  </script>
+</body>
+</html>

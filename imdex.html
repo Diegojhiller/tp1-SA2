@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejercicio básico con JavaScript</title>
+  <style>
+    body {
+      background-color: white;
+      color: black;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      transition: background-color 0.5s, color 0.5s;
+    }
+
+    input {
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sitio web practico de seminario</h1>
+
+  <input type="text" id="cajaTexto" placeholder="Escribe algo y presiona Enter">
+  <br>
+  <button id="botonColor">Cambiar colores</button>
+
+  <script>
+    // Seleccionamos los elementos del HTML
+    const cajaTexto = document.getElementById("cajaTexto");
+    const botonColor = document.getElementById("botonColor");
+
+    // Variable para saber en qué estado de color estamos
+    let estadoColor = 2;
+
+    // Evento para detectar cuando el usuario presiona una tecla en la caja de texto
+    cajaTexto.addEventListener("keydown", function(evento) {
+      if (evento.key === "Enter") {
+        alert("Texto ingresado: " + cajaTexto.value);
+      }
+    });
+
+    // Evento para cambiar colores al hacer click en el botón
+    botonColor.addEventListener("click", function() {
+      if (estadoColor === 0) {
+        document.body.style.backgroundColor = "black";
+        document.body.style.color = "white";
+        estadoColor = 1;
+      } else if (estadoColor === 1) {
+        document.body.style.backgroundColor = "skyblue";
+        document.body.style.color = "red";
+        estadoColor = 2;
+      } else {
+        document.body.style.backgroundColor = "white";
+        document.body.style.color = "black";
+        estadoColor = 0;
+      }
+    });
+  </script>
+</body>
+</html>
