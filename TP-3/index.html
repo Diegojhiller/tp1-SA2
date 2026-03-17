@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro de Alumnos</title>
+    <style>
+        body { font-family: sans-serif; max-width: 500px; margin: 20px auto; line-height: 1.6; }
+        .campo { margin-bottom: 10px; }
+        label { display: block; }
+        button { cursor: pointer; background: #28a745; color: white; border: none; padding: 10px; border-radius: 5px; }
+        #lista { margin-top: 20px; border-top: 1px solid #ccc; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <h2>=== REGISTRO DE ALUMNOS ===</h2>
+    
+    <div class="campo">
+        <label>Nombre:</label>
+        <input type="text" id="nombre" placeholder="Nombre del alumno">
+    </div>
+    <div class="campo">
+        <label>Edad:</label>
+        <input type="number" id="edad">
+    </div>
+    <div class="campo">
+        <label>Nota:</label>
+        <input type="number" step="0.1" id="nota">
+    </div>
+
+    <button id="btnGuardar">Guardar Alumno</button>
+
+    <div id="lista">
+        <h3>Alumnos Guardados:</h3>
+        <ul id="listaAlumnos"></ul>
+        <p><strong>Promedio General: </strong><span id="promedio">0</span></p>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
