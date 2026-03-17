@@ -21,6 +21,7 @@ const inputNombre = document.getElementById('nombre');
 const inputEdad   = document.getElementById('edad');
 const inputNota   = document.getElementById('nota');
 const btnGuardar  = document.getElementById('btnGuardar');
+const btnLimpiar  = document.getElementById('btnLimpiar');
 const contenedorLista = document.getElementById('listaAlumnos');
 const spanPromedio = document.getElementById('promedio');
 
@@ -40,6 +41,8 @@ const actualizarInterfaz = () => {
     if (personas.length > 0) {
         const promedio = suma / personas.length;
         spanPromedio.textContent = promedio.toFixed(2);
+    } else {
+        spanPromedio.textContent = "0";
     }
 };
 
@@ -67,6 +70,13 @@ btnGuardar.addEventListener('click', () => {
     } else {
         alert("Por favor, completa todos los campos correctamente.");
     }
+});
+
+// Evento de clic para limpiar todos los datos guardados
+btnLimpiar.addEventListener('click', () => {
+    personas = [];
+    localStorage.removeItem('mis_alumnos');
+    actualizarInterfaz();
 });
 
 // Al cargar la página por primera vez, dibujamos los datos persistidos
