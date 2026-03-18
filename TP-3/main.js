@@ -1,20 +1,8 @@
-// --- FUNCIONES DE PERSISTENCIA (MÓDULO INTERNO) ---
+// --- INTEGRACION CON BACKEND ---
 
-// Esta función guarda el array convirtiéndolo en Texto (JSON)
-const guardarEnLocal = (alumnos) => {
-    localStorage.setItem('mis_alumnos', JSON.stringify(alumnos));
-};
+const API_URL = '/api/alumnos';
 
-// Esta función recupera el texto y lo convierte de nuevo en Array
-const cargarDeLocal = () => {
-    const datos = localStorage.getItem('mis_alumnos');
-    return datos ? JSON.parse(datos) : [];
-};
-
-// --- LÓGICA DEL PROGRAMA ---
-
-// Iniciamos nuestra lista con lo que ya existe en el navegador
-let personas = cargarDeLocal();
+let personas = [];
 
 // Referencias a los elementos del HTML
 const inputNombre = document.getElementById('nombre');
@@ -47,37 +35,76 @@ const actualizarInterfaz = () => {
 };
 
 // Evento de clic para guardar
-btnGuardar.addEventListener('click', () => {
+btnGuardar.addEventListener('click', async () => {
     const nombre = inputNombre.value;
     const edad   = parseInt(inputEdad.value);
     const nota   = parseFloat(inputNota.value);
 
     if (nombre && !isNaN(edad) && !isNaN(nota)) {
-        // 1. Creamos el objeto
         const nuevaPersona = { nombre, edad, nota };
 
-        // 2. Agregamos al array
-        personas.push(nuevaPersona);
+        try {
+            const respuesta = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(nuevaPersona)
+            });
 
-        // 3. PERSISTENCIA: Guardamos en el navegador
-        guardarEnLocal(personas);
+            const data = await respuesta.json();
 
-        // 4. Actualizamos la vista y limpiamos campos
-        actualizarInterfaz();
-        inputNombre.value = "";
-        inputEdad.value = "";
-        inputNota.value = "";
+            if (!respuesta.ok) {
+                throw new Error(data.error || 'No se pudo guardar el alumno.');
+            }
+
+            personas = data.alumnos;
+            actualizarInterfaz();
+            inputNombre.value = "";
+            inputEdad.value = "";
+            inputNota.value = "";
+        } catch (error) {
+            alert(error.message);
+        }
     } else {
         alert("Por favor, completa todos los campos correctamente.");
     }
 });
 
 // Evento de clic para limpiar todos los datos guardados
-btnLimpiar.addEventListener('click', () => {
-    personas = [];
-    localStorage.removeItem('mis_alumnos');
-    actualizarInterfaz();
+btnLimpiar.addEventListener('click', async () => {
+    try {
+        const respuesta = await fetch(API_URL, {
+            method: 'DELETE'
+        });
+
+        const data = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(data.error || 'No se pudo limpiar la lista.');
+        }
+
+        personas = data.alumnos;
+        actualizarInterfaz();
+    } catch (error) {
+        alert(error.message);
+    }
 });
 
-// Al cargar la página por primera vez, dibujamos los datos persistidos
-actualizarInterfaz();
+const iniciar = async () => {
+    try {
+        const respuesta = await fetch(API_URL);
+        const data = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(data.error || 'No se pudieron cargar los alumnos.');
+        }
+
+        personas = data.alumnos;
+        actualizarInterfaz();
+    } catch (error) {
+        alert(error.message);
+    }
+};
+
+iniciar();
