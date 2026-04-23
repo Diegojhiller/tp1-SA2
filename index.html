@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrenamiento de modelo secuencial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <h1 class="title">Modelo secuencial</h1>
+        <h3>Aprende la fórmula <span>y = 2x + 6</span></h3>
+        <p class="lead">Entrenamiento en navegador con 9 muestras, tensores de forma [9,1] y al menos 350 épocas. Cuando el modelo termina, queda listo para predecir valores de Y a partir de X.</p>
+      </div>
+
+      <div class="status-card">
+        <div class="status-row">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Preparando entrenamiento...</span>
+        </div>
+        <div class="progress-bar" aria-hidden="true">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="meta-grid">
+          <div>
+            <span class="meta-label">Época</span>
+            <strong id="epochValue">0 / 400</strong>
+          </div>
+          <div>
+            <span class="meta-label">Pérdida</span>
+            <strong id="lossValue">--</strong>
+          </div>
+          <div>
+            <span class="meta-label">Estado</span>
+            <strong id="readyValue">Entrenando</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Datos de entrenamiento</h2>
+        <p>Se usan valores de X desde -6 hasta 2, con 9 muestras. El modelo aprende la relación lineal exacta y luego queda disponible para inferencia.</p>
+
+        <div class="samples" id="samplesList"></div>
+      </article>
+
+      <article class="panel">
+        <h2>Predicción</h2>
+        <p>Ingresa un número para X y el modelo devolverá el valor estimado de Y.</p>
+
+        <form id="predictForm" class="form">
+          <label for="xInput">Valor de X</label>
+          <div class="input-row">
+            <input id="xInput" type="number" step="any" placeholder="Ejemplo: 7" disabled />
+            <button type="submit" id="predictButton" disabled>Predecir</button>
+          </div>
+        </form>
+
+        <div class="result-box">
+          <span class="result-label">Resultado</span>
+          <strong id="resultValue">Espera a que termine el entrenamiento</strong>
+          <small id="resultHint">El formulario se habilitará cuando el modelo esté listo.</small>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
