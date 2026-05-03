@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrenamiento con TensorFlow.js</title>
+    
+    <!-- 1. Cargamos la librería de TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    
+    <!-- 2. Cargamos la librería de Chart.js (la que elegimos para hacer gráficos fáciles) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Un poco de estilo para que se parezca a tu captura de pantalla -->
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
+        .container { max-width: 800px; margin: auto; }
+        .btn { 
+            background-color: #4CAF50; color: white; padding: 10px 20px; 
+            border: none; cursor: pointer; border-radius: 5px; font-weight: bold;
+        }
+        .btn:hover { background-color: #45a049; }
+        #estado { margin-top: 15px; font-style: italic; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Predicción con TensorFlow.js</h1>
+        
+        <!-- Este botón es el que el usuario va a hacer clic para empezar el entrenamiento -->
+        <button id="btn-entrenar" class="btn">Entrenar Modelo</button>
+        
+        <h2>Gráfica de Pérdida durante el Entrenamiento</h2>
+        
+        <!-- 3. EL CANVAS: Aquí es donde Chart.js va a "dibujar" nuestro gráfico -->
+        <canvas id="graficoPerdida" width="800" height="400"></canvas>
+        
+        <p id="estado">Estado: Esperando para entrenar...</p>
+
+        <!-- SECCIÓN DE PREDICCIÓN -->
+        <hr style="margin-top: 30px; border: 1px solid #eee;">
+        <h2>Predicción</h2>
+        <p>Valores de X (separados por comas):</p>
+        <input type="text" id="input-x" value="10, 20, 25" style="padding: 8px; width: 200px; margin-right: 10px;">
+        <button id="btn-predecir" class="btn" style="background-color: #2196F3;" disabled>Predecir</button>
+        
+        <div style="margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 5px;">
+            <h3>Resultados:</h3>
+            <ul id="lista-resultados">
+                <li>Entrena el modelo primero para poder predecir.</li>
+            </ul>
+        </div>
+
+        <!-- 4. Acá conectaremos nuestro propio código JavaScript (que crearemos en el próximo paso) -->
+        <script src="app.js"></script>
+    </div>
+</body>
+</html>
