@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modelos TensorFlow.js — Cap. 2</title>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <!-- Toxicity model -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity@1.2.2/dist/toxicity.min.js"></script>
+  <!-- Universal Sentence Encoder (requerido por toxicity) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder@1.3.3/dist/universal-sentence-encoder.min.js"></script>
+  <!-- MobileNet model -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1f2e 0%, #0f1117 100%);
+      border-bottom: 1px solid #2d3748;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .tf-logo {
+      width: 40px; height: 40px;
+      background: #ff6f00;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1.1rem; color: white;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #f7fafc;
+    }
+
+    header p {
+      font-size: 0.8rem;
+      color: #718096;
+      margin-top: 2px;
+    }
+
+    .badge {
+      margin-left: auto;
+      background: #1a365d;
+      color: #90cdf4;
+      border: 1px solid #2b6cb0;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: #1a1f2e;
+      border: 1px solid #2d3748;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1rem 1.4rem;
+      border-bottom: 1px solid #2d3748;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .card-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .icon-tox  { background: #2d1b1b; }
+    .icon-truck { background: #1a2d1a; }
+
+    .card-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #f7fafc;
+    }
+
+    .card-header .subtitle {
+      font-size: 0.75rem;
+      color: #718096;
+      margin-top: 1px;
+    }
+
+    .model-tag {
+      margin-left: auto;
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .tag-red   { background: #2d1b1b; color: #fc8181; border: 1px solid #9b2c2c; }
+    .tag-green { background: #1a2d1a; color: #68d391; border: 1px solid #276749; }
+
+    .card-body { padding: 1.4rem; }
+
+    /* ── Status chip ── */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      padding: 5px 12px;
+      border-radius: 20px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .status.loading { background: #2d2d00; color: #f6e05e; border: 1px solid #d69e2e; }
+    .status.ready   { background: #1a2d1a; color: #68d391; border: 1px solid #276749; }
+    .status.error   { background: #2d1b1b; color: #fc8181; border: 1px solid #9b2c2c; }
+
+    .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.pulse {
+      background: #ecc94b;
+      animation: pulse 1.2s infinite;
+    }
+
+    .dot.green  { background: #48bb78; }
+    .dot.red    { background: #fc8181; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    /* ── Inputs ── */
+    textarea {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      color: #e2e8f0;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: inherit;
+    }
+
+    textarea:focus { border-color: #4299e1; }
+    textarea::placeholder { color: #4a5568; }
+
+    /* ── Buttons ── */
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.6rem 1.3rem;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3182ce, #2b6cb0);
+      color: white;
+      margin-top: 0.75rem;
+    }
+
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── Toxicity results ── */
+    .tox-results {
+      margin-top: 1.1rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .tox-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.55rem 0.8rem;
+      background: #0f1117;
+      border-radius: 8px;
+      border: 1px solid #2d3748;
+    }
+
+    .tox-label {
+      font-size: 0.78rem;
+      color: #a0aec0;
+      text-transform: capitalize;
+      width: 160px;
+      flex-shrink: 0;
+    }
+
+    .tox-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: #2d3748;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .tox-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+
+    .bar-safe    { background: #48bb78; }
+    .bar-toxic   { background: #fc8181; }
+    .bar-unknown { background: #718096; }
+
+    .tox-pct {
+      font-size: 0.72rem;
+      width: 38px;
+      text-align: right;
+      color: #718096;
+    }
+
+    .match-chip {
+      font-size: 0.68rem;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .chip-yes  { background: #2d1b1b; color: #fc8181; }
+    .chip-no   { background: #1a2d1a; color: #68d391; }
+    .chip-null { background: #2d2d2d; color: #718096; }
+
+    /* ── Truck upload area ── */
+    .upload-area {
+      border: 2px dashed #2d3748;
+      border-radius: 10px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #0f1117;
+      position: relative;
+    }
+
+    .upload-area:hover { border-color: #4299e1; background: #0d1520; }
+    .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    .upload-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .upload-area p { color: #718096; font-size: 0.85rem; }
+    .upload-area strong { color: #90cdf4; }
+
+    #preview-container {
+      margin-top: 1rem;
+      display: none;
+      text-align: center;
+    }
+
+    #preview-img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 10px;
+      border: 1px solid #2d3748;
+      object-fit: contain;
+    }
+
+    /* ── Truck results ── */
+    .truck-result {
+      margin-top: 1rem;
+    }
+
+    .alert-box {
+      padding: 1rem 1.2rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .alert-truck    { background: #2d1b00; color: #f6ad55; border: 1px solid #c05621; }
+    .alert-notruck  { background: #1a2d1a; color: #68d391; border: 1px solid #276749; }
+    .alert-neutral  { background: #1a1f2e; color: #a0aec0; border: 1px solid #2d3748; }
+
+    .alert-emoji { font-size: 1.5rem; }
+
+    .predictions-list {
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .pred-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.8rem;
+    }
+
+    .pred-name {
+      width: 220px;
+      flex-shrink: 0;
+      color: #a0aec0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pred-bar-wrap {
+      flex: 1;
+      height: 5px;
+      background: #2d3748;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .pred-bar { height: 100%; border-radius: 3px; background: #4299e1; transition: width 0.4s; }
+    .pred-bar.highlight { background: #f6ad55; }
+
+    .pred-pct { width: 38px; text-align: right; color: #718096; font-size: 0.72rem; }
+
+    /* ── Footer note ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #4a5568;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="tf-logo">TF</div>
+  <div>
+    <h1>Modelos TensorFlow.js — Capítulo 2</h1>
+    <p>Aprendizaje Automático · IPF 2025</p>
+  </div>
+  <span class="badge">TFJS v3</span>
+</header>
+
+<main>
+
+  <!-- ══════════════════════════════════════
+       MODELO 1 — TOXICIDAD
+  ══════════════════════════════════════ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-tox">☣️</div>
+      <div>
+        <h2>Modelo de Toxicidad</h2>
+        <div class="subtitle">Clasifica texto en 7 categorías de toxicidad</div>
+      </div>
+      <span class="model-tag tag-red">@tensorflow-models/toxicity</span>
+    </div>
+
+    <div class="card-body">
+      <div id="tox-status" class="status loading">
+        <span class="dot pulse"></span>
+        Cargando modelo… (puede tardar unos segundos)
+      </div>
+
+      <textarea id="tox-input" rows="3"
+        placeholder='Escribí una oración en inglés, ej: "You are amazing!" o "I hate you so much"'
+        disabled></textarea>
+
+      <button id="tox-btn" class="btn-primary" disabled>
+        🔍 Analizar toxicidad
+      </button>
+
+      <div id="tox-results" class="tox-results"></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       MODELO 2 — ALERTA CAMIÓN (MobileNet)
+  ══════════════════════════════════════ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-icon icon-truck">🚚</div>
+      <div>
+        <h2>Alerta Camión</h2>
+        <div class="subtitle">Detecta si hay un camión (truck) en una imagen via MobileNet</div>
+      </div>
+      <span class="model-tag tag-green">@tensorflow-models/mobilenet</span>
+    </div>
+
+    <div class="card-body">
+      <div id="truck-status" class="status loading">
+        <span class="dot pulse"></span>
+        Cargando modelo MobileNet…
+      </div>
+
+      <div class="upload-area" id="upload-area">
+        <input type="file" id="truck-file" accept="image/*" disabled />
+        <div class="upload-icon">📁</div>
+        <p><strong>Hacé clic</strong> o arrastrá una imagen</p>
+        <p style="margin-top:4px; font-size:0.75rem;">JPG, PNG, WEBP — se clasifica localmente en el navegador</p>
+      </div>
+
+      <div id="preview-container">
+        <img id="preview-img" alt="Vista previa" />
+      </div>
+
+      <button id="truck-btn" class="btn-primary" disabled>
+        🚛 Detectar camión
+      </button>
+
+      <div id="truck-result" class="truck-result"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Basado en el Capítulo 2 de "Learning TensorFlow.js" · Gant Laborde (O'Reilly) · 
+  Modelos ejecutados 100% en el navegador sin servidor
+</footer>
+
+<script>
+/* ══════════════════════════════════════
+   MODELO 1 — TOXICIDAD
+══════════════════════════════════════ */
+const TOX_THRESHOLD = 0.85;
+let toxModel = null;
+
+const toxStatus   = document.getElementById('tox-status');
+const toxInput    = document.getElementById('tox-input');
+const toxBtn      = document.getElementById('tox-btn');
+const toxResults  = document.getElementById('tox-results');
+
+function setStatus(el, type, text) {
+  const dotClass = type === 'ready' ? 'green' : type === 'error' ? 'red' : 'pulse';
+  el.className = `status ${type}`;
+  el.innerHTML = `<span class="dot ${dotClass}"></span>${text}`;
+}
+
+// Cargar modelo de toxicidad
+toxicity.load(TOX_THRESHOLD).then(model => {
+  toxModel = model;
+  setStatus(toxStatus, 'ready', 'Modelo listo');
+  toxInput.disabled = false;
+  toxBtn.disabled   = false;
+}).catch(err => {
+  setStatus(toxStatus, 'error', 'Error al cargar modelo');
+  console.error(err);
+});
+
+toxBtn.addEventListener('click', async () => {
+  const text = toxInput.value.trim();
+  if (!text) return;
+
+  toxBtn.disabled = true;
+  toxBtn.textContent = '⏳ Analizando…';
+  toxResults.innerHTML = '';
+
+  try {
+    const predictions = await toxModel.classify([text]);
+    renderToxResults(predictions);
+  } catch (e) {
+    toxResults.innerHTML = `<p style="color:#fc8181; font-size:.85rem;">Error al clasificar: ${e.message}</p>`;
+  } finally {
+    toxBtn.disabled = false;
+    toxBtn.textContent = '🔍 Analizar toxicidad';
+  }
+});
+
+function renderToxResults(predictions) {
+  // Ordenar: tóxicas primero
+  const sorted = [...predictions].sort((a, b) => {
+    const pa = a.results[0].probabilities[1];
+    const pb = b.results[0].probabilities[1];
+    return pb - pa;
+  });
+
+  toxResults.innerHTML = sorted.map(p => {
+    const prob     = p.results[0].probabilities[1]; // probabilidad de ser tóxico
+    const match    = p.results[0].match;
+    const pct      = (prob * 100).toFixed(1);
+    const barClass = match === true ? 'bar-toxic' : match === false ? 'bar-safe' : 'bar-unknown';
+    const chipText = match === true ? 'TÓXICO' : match === false ? 'OK' : 'INDEFINIDO';
+    const chipClass= match === true ? 'chip-yes' : match === false ? 'chip-no' : 'chip-null';
+    const label    = p.label.replace(/_/g, ' ');
+
+    return `
+      <div class="tox-row">
+        <span class="tox-label">${label}</span>
+        <div class="tox-bar-wrap">
+          <div class="tox-bar ${barClass}" style="width:${pct}%"></div>
+        </div>
+        <span class="tox-pct">${pct}%</span>
+        <span class="match-chip ${chipClass}">${chipText}</span>
+      </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   MODELO 2 — ALERTA CAMIÓN (MobileNet)
+══════════════════════════════════════ */
+const TRUCK_KEYWORDS = ['truck', 'pickup', 'lorry', 'van', 'semi', 'trailer', 'freight'];
+let mobileNetModel = null;
+let selectedFile   = null;
+
+const truckStatus = document.getElementById('truck-status');
+const truckFile   = document.getElementById('truck-file');
+const truckBtn    = document.getElementById('truck-btn');
+const truckResult = document.getElementById('truck-result');
+const previewCont = document.getElementById('preview-container');
+const previewImg  = document.getElementById('preview-img');
+
+// Cargar MobileNet
+mobilenet.load().then(model => {
+  mobileNetModel = model;
+  setStatus(truckStatus, 'ready', 'Modelo listo');
+  truckFile.disabled = false;
+}).catch(err => {
+  setStatus(truckStatus, 'error', 'Error al cargar MobileNet');
+  console.error(err);
+});
+
+truckFile.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedFile = file;
+  truckResult.innerHTML = '';
+
+  const url = URL.createObjectURL(file);
+  previewImg.src = url;
+  previewCont.style.display = 'block';
+  truckBtn.disabled = false;
+  truckBtn.textContent = '🚛 Detectar camión';
+});
+
+truckBtn.addEventListener('click', async () => {
+  if (!selectedFile || !mobileNetModel) return;
+
+  truckBtn.disabled = true;
+  truckBtn.textContent = '⏳ Clasificando…';
+
+  try {
+    const predictions = await mobileNetModel.classify(previewImg, 10);
+    renderTruckResult(predictions);
+  } catch (e) {
+    truckResult.innerHTML = `<p style="color:#fc8181; font-size:.85rem;">Error: ${e.message}</p>`;
+  } finally {
+    truckBtn.disabled = false;
+    truckBtn.textContent = '🚛 Detectar camión';
+  }
+});
+
+function renderTruckResult(predictions) {
+  // Detectar si alguna predicción top contiene palabras clave de camión
+  const truckPred = predictions.find(p =>
+    TRUCK_KEYWORDS.some(kw => p.className.toLowerCase().includes(kw))
+  );
+
+  let alertHtml = '';
+  if (truckPred) {
+    alertHtml = `
+      <div class="alert-box alert-truck">
+        <span class="alert-emoji">🚨</span>
+        <div>
+          <div>¡ALERTA! Camión detectado</div>
+          <div style="font-weight:400; font-size:.8rem; margin-top:2px; color:#fbd38d;">
+            "${truckPred.className}" — ${(truckPred.probability * 100).toFixed(1)}% de confianza
+          </div>
+        </div>
+      </div>`;
+  } else {
+    alertHtml = `
+      <div class="alert-box alert-notruck">
+        <span class="alert-emoji">✅</span>
+        <div>Sin camión detectado en las predicciones principales</div>
+      </div>`;
+  }
+
+  // Listar top predicciones
+  const predsHtml = predictions.map(p => {
+    const pct  = (p.probability * 100).toFixed(1);
+    const isHit = TRUCK_KEYWORDS.some(kw => p.className.toLowerCase().includes(kw));
+    return `
+      <div class="pred-row">
+        <span class="pred-name" title="${p.className}">${p.className}</span>
+        <div class="pred-bar-wrap">
+          <div class="pred-bar ${isHit ? 'highlight' : ''}" style="width:${Math.min(pct, 100)}%"></div>
+        </div>
+        <span class="pred-pct">${pct}%</span>
+      </div>`;
+  }).join('');
+
+  truckResult.innerHTML = `
+    ${alertHtml}
+    <p style="font-size:.75rem; color:#718096; margin-bottom:.5rem;">Top 10 clasificaciones:</p>
+    <div class="predictions-list">${predsHtml}</div>
+  `;
+}
+</script>
+
+</body>
+</html>
